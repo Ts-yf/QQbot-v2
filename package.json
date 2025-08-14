@@ -1,0 +1,16 @@
+{
+  "name": "qq-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "tweetnacl": "^1.0.3",
+    "serverless-http": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
