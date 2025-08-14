@@ -1,7 +1,7 @@
-import { createServer } from "http";
-import express from 'express';
-import serverless from 'serverless-http';
-const { sign } = (await import("tweetnacl")).default;
+const { createServer } = require("http");
+const express = require('express');
+const serverless = require('serverless-http');
+const { sign } = (await require("tweetnacl")).default;
 
 const app = express();
 app.use(express.json());
