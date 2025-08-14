@@ -1,7 +1,9 @@
-const { createServer } = require("http");
-const express = require('express');
-const serverless = require('serverless-http');
-const { sign } = (await require("tweetnacl")).default;
+import { createServer } from "http";
+import express from 'express';
+import serverless from 'serverless-http';
+import { sign } from "tweetnacl";
+import axios from "axios";
+
 
 const app = express();
 app.use(express.json());
@@ -25,6 +27,7 @@ process.on('uncaughtException', (err) => {
 async function makeWebHook(req, secret) {
   if (!secret) return req.res.send('secret参数为空');
   let data = req.body;
+  let appid = req.headers["x-bot-appid"];
   if (typeof data != 'object') { 
     try { data = JSON.parse(data) } catch (err) { return log('解析webhook消息错误', err) } 
   }
@@ -32,11 +35,28 @@ async function makeWebHook(req, secret) {
     log(`[${secret.slice(0, 3)}***]回调配置消息：${JSON.stringify(data)}`);
     return makeWebHookSign(req, secret);
   }
-  await makeMsg(data, secret);
+  await makeMsg(data, secret, appid);
   return req.res.sendStatus(200);
 }
+async function sendmsg(msg, secret, appid, req_data){
+  let get_token_url = "https://bots.qq.com/app/getAppAccessToken";
+  let body = { clientSecret: secret, appId: appid };
+  let { data } = await axios.post(get_token_url, body);
+  log(100, req_data, 123, body, 456, data);
+  let access_token = data.access_token;
+  let group_id = req_data?.d?.group_id || req_data?.d?.group_openid;
+  let user_id = req_data?.d?.author?.id || req_data?.d?.group_member_openid || req_data?.d?.user_openid || req_data?.d?.openid;
+  let baseURL = "https://api.sgroup.qq.com/v2";
+  let send_msg_url = (!group_id) ? `${baseURL}/users/${user_id}` : `${baseURL}/groups/${group_id}`;
+  log(111, send_msg_url);
+  let payload = { msg_type: 0, msg_seq: 1, content: msg, msg_id: req_data?.d?.id };
+  log(222, payload);
+  let { data: result } = await axios.post(send_msg_url, payload, { headers: { Authorization: `QQBot ${access_token}` } });
+  log(333, result);
+  return result;
+}
 
-async function makeMsg(data, secret) {
+async function makeMsg(data, secret, appid) {
   let id = data.id;
   let op = data.op;
   let d = data.d;
@@ -45,7 +65,10 @@ async function makeMsg(data, secret) {
     case 0:
       switch (t) {
         case 'GROUP_AT_MESSAGE_CREATE':
+          await sendmsg('serverless消息测试', secret, appid, data);
           return log(`[${secret.slice(0, 3)}***][群消息]：${d.content}`);
+        case 'C2C_MESSAGE_CREATE':
+          return log(`[${secret.slice(0, 3)}***][私聊消息]：${d.content}`);
         default:
           return log(`[${secret.slice(0, 3)}***]收到消息类型：${t}`);
       }
