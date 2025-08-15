@@ -35,8 +35,9 @@ async function makeWebHook(req, secret) {
     log(`[${secret.slice(0, 3)}***]回调配置消息：${JSON.stringify(data)}`);
     return makeWebHookSign(req, secret);
   }
+  await req.res.sendStatus(200);
   await makeMsg(data, secret, appid);
-  return req.res.sendStatus(200);
+  return;
 }
 async function sendmsg(msg, secret, appid, req_data){
   let get_token_url = "https://bots.qq.com/app/getAppAccessToken";
@@ -47,7 +48,7 @@ async function sendmsg(msg, secret, appid, req_data){
   let group_id = req_data?.d?.group_id || req_data?.d?.group_openid;
   let user_id = req_data?.d?.author?.id || req_data?.d?.group_member_openid || req_data?.d?.user_openid || req_data?.d?.openid;
   let baseURL = "https://api.sgroup.qq.com/v2";
-  let send_msg_url = (!group_id) ? `${baseURL}/users/${user_id}` : `${baseURL}/groups/${group_id}`;
+  let send_msg_url = (!group_id) ? `${baseURL}/users/${user_id}/message` : `${baseURL}/groups/${group_id}/message`;
   log(111, send_msg_url);
   let payload = { msg_type: 0, msg_seq: 1, content: msg, msg_id: req_data?.d?.id };
   log(222, payload);
@@ -65,9 +66,10 @@ async function makeMsg(data, secret, appid) {
     case 0:
       switch (t) {
         case 'GROUP_AT_MESSAGE_CREATE':
-          await sendmsg('serverless消息测试', secret, appid, data);
+          await sendmsg('机器人服务未连接到服务器（error：1）', secret, appid, data);
           return log(`[${secret.slice(0, 3)}***][群消息]：${d.content}`);
         case 'C2C_MESSAGE_CREATE':
+          await sendmsg('机器人服务未连接到服务器（error：2）', secret, appid, data);
           return log(`[${secret.slice(0, 3)}***][私聊消息]：${d.content}`);
         default:
           return log(`[${secret.slice(0, 3)}***]收到消息类型：${t}`);
