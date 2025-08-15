@@ -48,7 +48,7 @@ async function sendmsg(msg, secret, appid, req_data){
   let group_id = req_data?.d?.group_id || req_data?.d?.group_openid;
   let user_id = req_data?.d?.author?.id || req_data?.d?.group_member_openid || req_data?.d?.user_openid || req_data?.d?.openid;
   let baseURL = "https://api.sgroup.qq.com/v2";
-  let send_msg_url = (!group_id) ? `${baseURL}/users/${user_id}/message` : `${baseURL}/groups/${group_id}/message`;
+  let send_msg_url = (!group_id) ? `${baseURL}/users/${user_id}/messages` : `${baseURL}/groups/${group_id}/messages`;
   log(111, send_msg_url);
   let payload = { msg_type: 0, msg_seq: 1, content: msg, msg_id: req_data?.d?.id };
   log(222, payload);
